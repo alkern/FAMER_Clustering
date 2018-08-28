@@ -43,7 +43,7 @@
         <module>famer-clustering</module>
         <module>famer-clusterPostProcessing</module>
         <module>famer-example</module>
-        <module>fusion_eval</module>
+        <module>fusion-eval</module>
     </modules>
 
     <distributionManagement>
