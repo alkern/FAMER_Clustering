@@ -2,15 +2,14 @@ package de.alkern.infofusion.eval.wrapper;
 
 import de.alkern.infofusion.eval.util.GraphIO;
 import org.gradoop.flink.model.api.epgm.LogicalGraph;
-import org.gradoop.flink.util.GradoopFlinkConfig;
 import org.gradoop.gretl.graph.operations.info_fusion.GraphToGraphVertexFusion;
 
 public class FusionWrapper {
 
-    private final GradoopFlinkConfig config;
+    private final GraphIO graphIO;
 
-    public FusionWrapper(GradoopFlinkConfig config) {
-        this.config = config;
+    public FusionWrapper(GraphIO graphIO) {
+        this.graphIO = graphIO;
     }
 
     /**
@@ -19,7 +18,7 @@ public class FusionWrapper {
      * @return the fused result graph
      */
     public LogicalGraph fuse(String query) {
-        LogicalGraph input = GraphIO.getPreparedMusicbrainzGraph(config);
+        LogicalGraph input = graphIO.getPreparedMusicbrainzGraph();
         GraphToGraphVertexFusion operator = new GraphToGraphVertexFusion(query);
         return input.callForGraph(operator);
     }

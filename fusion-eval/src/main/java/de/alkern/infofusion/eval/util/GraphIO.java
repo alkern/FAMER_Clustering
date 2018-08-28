@@ -16,43 +16,58 @@ import java.io.IOException;
 
 public class GraphIO {
 
-    public static LogicalGraph loadGraph(String srcFolder, GradoopFlinkConfig config) {
+    private final GradoopFlinkConfig config;
+
+    public GraphIO(GradoopFlinkConfig config) {
+        this.config = config;
+    }
+
+    public LogicalGraph loadGraph(String srcFolder) {
         JSONDataSource dataSource = new JSONDataSource(srcFolder + "graphHeads.json", srcFolder + "vertices.json", srcFolder + "edges.json", config);
         return dataSource.getLogicalGraph();
     }
 
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    public static String getMusicbrainzThreshold045Path() {
+    public String getMusicbrainzThreshold045Path() {
         return "F:\\Daten\\Workspaces\\famer_fork\\inputGraphs\\DS2-MusicBrainz\\threshold_0.45\\";
     }
 
-    public static String getResultPath() {
+    public String getResultPath() {
         return getPreparedMusicbrainzPath()
                 .replace("musicbrainz", "result")
                 .replace("target/classes", "src/main/resources");
     }
 
-    public static String getPreparedMusicbrainzPath() {
+    public LogicalGraph getResultGraph() {
+        return loadGraph(getResultPath());
+    }
+
+    public String getPreparedMusicbrainzPath() {
         return GraphIO.class.getResource("/musicbrainz/").getFile();
     }
 
-    public static LogicalGraph getPreparedMusicbrainzGraph(GradoopFlinkConfig config) {
-        return loadGraph(getPreparedMusicbrainzPath(), config);
+    public LogicalGraph getPreparedMusicbrainzGraph() {
+        return loadGraph(getPreparedMusicbrainzPath());
     }
 
-    public static LogicalGraph loadMusicbrainzThreshold045(GradoopFlinkConfig config) {
+    public LogicalGraph loadMusicbrainzThreshold045() {
         String srcFolder = getMusicbrainzThreshold045Path();
-        return loadGraph(srcFolder, config);
+        return loadGraph(srcFolder);
     }
 
-    public static void saveResultGraph(LogicalGraph graph) throws IOException {
-        String path = getResultPath();
-        FileUtils.deleteDirectory(new File(path));
-        GraphIoUtils.writeGraph(graph, path);
+    public void saveResultGraph(LogicalGraph graph, GradoopFlinkConfig config) throws IOException {
+        String resultPath = getResultPath();
+        String outFolder = resultPath.substring(0, resultPath.length() - 1); //need to strip the last /
+        FileUtils.deleteDirectory(new File(outFolder));
+        GraphIoUtils.writeJson(graph, outFolder);
+//        graph.writeTo(new JSONDataSink(outFolder + "graphHeads.json",
+//                outFolder + "vertices.json",
+//                outFolder + "edges.json",
+//                config));
     }
 
-    public static LogicalGraph createTestGraph() {
+    public LogicalGraph createTestGraph() {
         ExecutionEnvironment env = ExecutionEnvironment.createLocalEnvironment();
         GradoopFlinkConfig config = GradoopFlinkConfig.createConfig(env);
         VertexFactory vertexFactory = config.getVertexFactory();
