@@ -23,14 +23,25 @@ public class GraphIO {
     }
 
     public LogicalGraph loadGraph(String srcFolder) {
-        JSONDataSource dataSource = new JSONDataSource(srcFolder + "graphHeads.json", srcFolder + "vertices.json", srcFolder + "edges.json", config);
+        JSONDataSource dataSource = new JSONDataSource(
+                srcFolder + "graphHeads.json",
+                srcFolder + "vertices.json",
+                srcFolder + "edges.json",
+                config);
         return dataSource.getLogicalGraph();
     }
 
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     public String getMusicbrainzThreshold045Path() {
-        return "F:\\Daten\\Workspaces\\famer_fork\\inputGraphs\\DS2-MusicBrainz\\threshold_0.45\\";
+        String os = System.getProperty("os.name");
+        if (os.toLowerCase().startsWith("win")) return "F:\\Daten\\Workspaces\\famer_fork\\inputGraphs\\DS2-MusicBrainz\\threshold_0.45\\";
+        else return "/home/alexander/Workspaces/FAMER_Clustering/inputGraphs/DS2-MusicBrainz/threshold_0.45/";
+    }
+
+    public LogicalGraph loadMusicbrainzThreshold045() {
+        String srcFolder = getMusicbrainzThreshold045Path();
+        return loadGraph(srcFolder);
     }
 
     public String getResultPath() {
@@ -55,17 +66,20 @@ public class GraphIO {
         return loadGraph(getPreparedMusicbrainzPath());
     }
 
-    public LogicalGraph loadMusicbrainzThreshold045() {
-        String srcFolder = getMusicbrainzThreshold045Path();
-        return loadGraph(srcFolder);
+    public void saveMergedGraph(LogicalGraph graph) throws IOException {
+        saveGraph(graph, getMergedPath());
     }
 
-    public void saveMergedGraph(LogicalGraph graph, GradoopFlinkConfig config) throws IOException {
-        String resultPath = getMergedPath();
+    public void saveResultGraph(LogicalGraph graph) throws IOException {
+        saveGraph(graph, getResultPath());
+    }
+
+    private void saveGraph(LogicalGraph graph, String resultPath) throws IOException {
         String outFolder = resultPath.substring(0, resultPath.length() - 1); //need to strip the last /
-        FileUtils.deleteDirectory(new File(outFolder));
         GraphIoUtils.writeJson(graph, outFolder);
     }
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     public LogicalGraph createTestGraph() {
         ExecutionEnvironment env = ExecutionEnvironment.createLocalEnvironment();

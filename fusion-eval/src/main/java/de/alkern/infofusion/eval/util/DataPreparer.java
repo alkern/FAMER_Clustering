@@ -2,6 +2,7 @@ package de.alkern.infofusion.eval.util;
 
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
+import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.common.model.impl.pojo.Vertex;
 import org.gradoop.common.model.impl.properties.Property;
 import org.gradoop.flink.model.api.epgm.LogicalGraph;
@@ -23,21 +24,22 @@ public class DataPreparer {
     }
 
     public LogicalGraph getMusicbrainzGraph() {
-        LogicalGraph unpreparedGraph = graphIO.getPreparedMusicbrainzGraph();
+        LogicalGraph preparedMusicbrainzGraph = graphIO.getPreparedMusicbrainzGraph();
         LogicalGraphFactory factory = config.getLogicalGraphFactory();
 
-        return factory.fromDataSets(unpreparedGraph.getVertices()
-                .map(new AddSourceId()));
+        return factory.fromDataSets(preparedMusicbrainzGraph.getVertices()
+                .map(new AddSourceId())
+                .map(new RemoveClusterId()));
     }
 
     public LogicalGraph combineGraphs(LogicalGraph g1, LogicalGraph g2) {
-        DataSet<Vertex> vertices1 = g1.getVertices();
-        DataSet<Vertex> allVertices = vertices1.union(g2.getVertices());
+        DataSet<Vertex> allVertices = g1.getVertices().union(g2.getVertices());
         return config.getLogicalGraphFactory().fromDataSets(allVertices);
     }
 
     /**
      * Add srcId 6 to the given graph and merge it with the Musicbrainz graph
+     *
      * @param graph
      * @return
      */
@@ -45,6 +47,12 @@ public class DataPreparer {
         Property prop = Property.create("srcId", 6);
         SetGraphProperty operator = new SetGraphProperty(prop);
         return combineGraphs(graph.callForGraph(operator), getMusicbrainzGraph());
+    }
+
+    public LogicalGraph addRecId(LogicalGraph resultGraph) {
+        LogicalGraphFactory factory = config.getLogicalGraphFactory();
+        return factory.fromDataSets(resultGraph.getVertices()
+                .map(new AddRecId()));
     }
 
     private static class AddSourceId implements MapFunction<Vertex, Vertex> {
@@ -74,6 +82,23 @@ public class DataPreparer {
             }
             value.setProperty("srcId", sourceId);
             return value;
+        }
+    }
+
+    private class RemoveClusterId implements MapFunction<Vertex, Vertex> {
+        @Override
+        public Vertex map(Vertex vertex) throws Exception {
+            vertex.removeProperty("ClusterId");
+            return vertex;
+        }
+    }
+
+    private class AddRecId implements MapFunction<Vertex, Vertex> {
+        @Override
+        public Vertex map(Vertex vertex) throws Exception {
+            GradoopId id = vertex.getId();
+            vertex.setProperty("recId", id.toString());
+            return vertex;
         }
     }
 }
