@@ -39,6 +39,10 @@ public class GraphIO {
                 .replace("target/classes", "src/main/resources");
     }
 
+    public String getMergedPath() {
+        return getResultPath().replace("result", "merged");
+    }
+
     public LogicalGraph getResultGraph() {
         return loadGraph(getResultPath());
     }
@@ -56,15 +60,11 @@ public class GraphIO {
         return loadGraph(srcFolder);
     }
 
-    public void saveResultGraph(LogicalGraph graph, GradoopFlinkConfig config) throws IOException {
-        String resultPath = getResultPath();
+    public void saveMergedGraph(LogicalGraph graph, GradoopFlinkConfig config) throws IOException {
+        String resultPath = getMergedPath();
         String outFolder = resultPath.substring(0, resultPath.length() - 1); //need to strip the last /
         FileUtils.deleteDirectory(new File(outFolder));
         GraphIoUtils.writeJson(graph, outFolder);
-//        graph.writeTo(new JSONDataSink(outFolder + "graphHeads.json",
-//                outFolder + "vertices.json",
-//                outFolder + "edges.json",
-//                config));
     }
 
     public LogicalGraph createTestGraph() {

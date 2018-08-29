@@ -6,7 +6,6 @@ import de.alkern.infofusion.eval.wrapper.FamerWrapper;
 import de.alkern.infofusion.eval.wrapper.FusionWrapper;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.gradoop.famer.example.ClusteringExample;
-import org.gradoop.flink.io.impl.json.JSONDataSink;
 import org.gradoop.flink.model.api.epgm.LogicalGraph;
 import org.gradoop.flink.util.GradoopFlinkConfig;
 
@@ -35,19 +34,20 @@ public class Main {
                 "    textual:lcs)\n";
         LogicalGraph result = fusionWrapper.fuse(query);
 
-        // Combine source and result into one graph
+        // Combine source and result into one graph and save it as merged
         LogicalGraph mergedWithSource = dataPreparer.mergeIntoSourceData(result);
-//        graphIO.saveResultGraph(mergedWithSource, config); //TODO speichern klappt nicht
-        mergedWithSource.writeTo(new JSONDataSink(
-                graphIO.getResultPath() + "graphHeads.json",
-                graphIO.getResultPath() + "vertices.json",
-                graphIO.getResultPath() + "edges.json",
-                config
-        ));
+        graphIO.saveMergedGraph(mergedWithSource, config); //TODO speichern klappt nicht
+//        mergedWithSource.writeTo(new JSONDataSink(
+//                graphIO.getMergedPath() + "graphHeads.json",
+//                graphIO.getMergedPath() + "vertices.json",
+//                graphIO.getMergedPath() + "edges.json",
+//                config
+//        ));
 
         // Cluster the merged graph
+        famerWrapper.executeClusteringExample();
         famerWrapper.executeClusteringExample(ClusteringExample.ClusteringMethods.CONCON,
-                graphIO.getResultPath(), graphIO.getResultPath().replace("result", "merged"));
+                graphIO.getMergedPath(), graphIO.getResultPath());
 
         // Analyze
         env.execute();
