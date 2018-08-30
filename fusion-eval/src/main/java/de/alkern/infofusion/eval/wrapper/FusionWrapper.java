@@ -18,6 +18,7 @@ public class FusionWrapper {
      * @return the fused result graph
      */
     public LogicalGraph fuse(String query) {
+        System.out.println("Start Fusion");
         LogicalGraph input = graphIO.getPreparedMusicbrainzGraph();
         GraphToGraphVertexFusion operator = new GraphToGraphVertexFusion(query);
         return input.callForGraph(operator);

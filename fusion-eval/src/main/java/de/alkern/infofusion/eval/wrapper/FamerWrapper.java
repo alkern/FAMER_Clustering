@@ -1,11 +1,18 @@
 package de.alkern.infofusion.eval.wrapper;
 
 import de.alkern.infofusion.eval.util.GraphIO;
+import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.gradoop.common.model.impl.pojo.Vertex;
+import org.gradoop.common.model.impl.properties.PropertyValue;
 import org.gradoop.famer.clustering.parallelClusteringGraph2Graph.CLIP;
 import org.gradoop.famer.clustering.parallelClusteringGraph2Graph.ConnectedComponents;
 import org.gradoop.famer.clustering.parallelClusteringGraph2Graph.util.CLIP.CLIPConfig;
 import org.gradoop.famer.clustering.parallelClusteringGraph2Graph.util.ClusteringOutputType;
 import org.gradoop.famer.example.ClusteringExample;
+import org.gradoop.famer.graphGenerator.Blocking.BlockingComponent2;
 import org.gradoop.flink.model.api.epgm.LogicalGraph;
 
 public class FamerWrapper {
@@ -37,6 +44,7 @@ public class FamerWrapper {
     }
 
     public LogicalGraph executeConcomClustering(LogicalGraph input) {
+        System.out.println("Start Concom Clustering");
         return input.callForGraph(new ConnectedComponents());
     }
 
@@ -45,5 +53,30 @@ public class FamerWrapper {
         clipConfig.setSourceNo(6);
         ClusteringOutputType clusteringOutputType = ClusteringOutputType.GRAPH;
         return input.callForGraph(new CLIP(clipConfig, clusteringOutputType));
+    }
+
+    public void link(LogicalGraph graph) throws Exception {
+        System.out.println("Start Linking");
+        BlockingComponent2 blocking = new BlockingComponent2("2", false);
+        LogicalGraph graphWithKeyAttribute = graphIO.getLogicalGraphFactory().fromDataSets(
+                graph.getVertices()
+                .map(new MapFunction<Vertex, Vertex>() {
+                    @Override
+                    public Vertex map(Vertex vertex) throws Exception {
+                        String value = vertex.getId().toString();
+                        vertex.setProperty("key", value);
+                        return vertex;
+                    }
+                })
+        );
+        DataSet<Tuple2<Vertex, Vertex>> blockingResult = blocking.execute(graphWithKeyAttribute);
+        blockingResult
+//                .filter(new FilterFunction<Tuple2<Vertex, Vertex>>() {
+//                    @Override
+//                    public boolean filter(Tuple2<Vertex, Vertex> vertexVertexTuple2) throws Exception {
+//                        return true;//vertexVertexTuple2.f0.getId().toString().equals("000000000000000000019302");
+//                    }
+//                })
+                .print();
     }
 }

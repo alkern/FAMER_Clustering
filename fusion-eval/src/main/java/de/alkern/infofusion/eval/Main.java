@@ -38,46 +38,47 @@ public class Main {
         LogicalGraph mergedWithSource = dataPreparer.mergeIntoSourceData(fusionResult);
         graphIO.saveMergedGraph(mergedWithSource);
 
-        // Cluster the merged graph
+        // Link and cluster the merged graph
+        famerWrapper.link(mergedWithSource);
         LogicalGraph clusteredResultGraph = famerWrapper.executeConcomClustering(mergedWithSource);
 
         //Check if a cluster contains more than one vertex
-        clusteredResultGraph.getVertices()
-                .map(new MapFunction<Vertex, Tuple2<String, Vertex>>() {
-                    @Override
-                    public Tuple2<String, Vertex> map(Vertex vertex) throws Exception {
-                        return new Tuple2<>(vertex.getPropertyValue("ClusterId").getString(), vertex);
-                    }
-                })
-                .groupBy(0)
-                .combineGroup(new GroupCombineFunction<Tuple2<String, Vertex>, Tuple2<Integer, String>>() {
-                    @Override
-                    public void combine(Iterable<Tuple2<String, Vertex>> iterable, Collector<Tuple2<Integer, String>> collector) throws Exception {
-                        int counter = 0;
-                        String clusterId = "";
-                        for (Tuple2<String, Vertex> it : iterable) {
-                            counter++;
-                            clusterId = it.f0;
-                        }
-                        collector.collect(new Tuple2<>(counter, clusterId));
-                    }
-                })
-                .filter(new FilterFunction<Tuple2<Integer, String>>() {
-                    @Override
-                    public boolean filter(Tuple2<Integer, String> integer) throws Exception {
-                        return integer.f0 > 1;
-                    }
-                })
-                .print();
-
-        clusteredResultGraph.getVertices()
-                .filter(new FilterFunction<Vertex>() {
-                    @Override
-                    public boolean filter(Vertex vertex) throws Exception {
-                        return vertex.getPropertyValue("ClusterId") == null;
-                    }
-                })
-                .print();
+//        clusteredResultGraph.getVertices()
+//                .map(new MapFunction<Vertex, Tuple2<String, Vertex>>() {
+//                    @Override
+//                    public Tuple2<String, Vertex> map(Vertex vertex) throws Exception {
+//                        return new Tuple2<>(vertex.getPropertyValue("ClusterId").getString(), vertex);
+//                    }
+//                })
+//                .groupBy(0)
+//                .combineGroup(new GroupCombineFunction<Tuple2<String, Vertex>, Tuple2<Integer, String>>() {
+//                    @Override
+//                    public void combine(Iterable<Tuple2<String, Vertex>> iterable, Collector<Tuple2<Integer, String>> collector) throws Exception {
+//                        int counter = 0;
+//                        String clusterId = "";
+//                        for (Tuple2<String, Vertex> it : iterable) {
+//                            counter++;
+//                            clusterId = it.f0;
+//                        }
+//                        collector.collect(new Tuple2<>(counter, clusterId));
+//                    }
+//                })
+//                .filter(new FilterFunction<Tuple2<Integer, String>>() {
+//                    @Override
+//                    public boolean filter(Tuple2<Integer, String> integer) throws Exception {
+//                        return integer.f0 > 1;
+//                    }
+//                })
+//                .print();
+//
+//        clusteredResultGraph.getVertices()
+//                .filter(new FilterFunction<Vertex>() {
+//                    @Override
+//                    public boolean filter(Vertex vertex) throws Exception {
+//                        return vertex.getPropertyValue("ClusterId") == null;
+//                    }
+//                })
+//                .print();
 
         graphIO.saveResultGraph(clusteredResultGraph);
 

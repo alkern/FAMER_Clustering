@@ -110,4 +110,8 @@ public class GraphIO {
         LogicalGraphFactory graphFactory = config.getLogicalGraphFactory();
         return graphFactory.fromDataSets(env.fromElements(vertex1, vertex2, vertex3));
     }
+
+    public LogicalGraphFactory getLogicalGraphFactory() {
+        return config.getLogicalGraphFactory();
+    }
 }
